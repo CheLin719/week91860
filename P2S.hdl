@@ -2,23 +2,26 @@ CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
     PARTS:
-    // Store input bits when load is asserted
-    Bit(in=indata[0], load=load, out=bit0);
-    Bit(in=indata[1], load=load, out=bit1);
-    Bit(in=indata[2], load=load, out=bit2);
-    Bit(in=indata[3], load=load, out=bit3);
+    // Shift register implementation
+    Bit(in=indata[0], load=load, out=shiftOut0);
+    Bit(in=indata[1], load=load, out=shiftOut1);
+    Bit(in=indata[2], load=load, out=shiftOut2);
+    Bit(in=indata[3], load=load, out=shiftOut3);
 
-    // State tracking bits
-    Bit(in=true, load=load, out=state0);
-    Bit(in=state0, load=enable, out=state1);
-    Bit(in=state1, load=enable, out=state2);
-    Bit(in=state2, load=enable, out=state3);
+    // Bit selection logic
+    Not(in=enable, out=notEnable);
     
-    // Bit output selection
-    Mux(a=bit0, b=bit1, sel=state1, out=out1);
-    Mux(a=out1, b=bit2, sel=state2, out=out2);
-    Mux(a=out2, b=bit3, sel=state3, out=sout);
+    // Bit selection using gates and multiplexing
+    And(a=enable, b=shiftOut0, out=out0);
+    And(a=enable, b=shiftOut1, out=out1);
+    And(a=enable, b=shiftOut2, out=out2);
+    And(a=enable, b=shiftOut3, out=out3);
     
-    // Complete signal logic
-    And(a=state3, b=enable, out=complete);
+    // Final bit output selection
+    Or(a=out0, b=out1, out=orOut1);
+    Or(a=out1, b=out2, out=orOut2);
+    Or(a=out2, b=out3, out=sout);
+    
+    // Complete signal generation
+    And(a=enable, b=notEnable, out=complete);
 }
