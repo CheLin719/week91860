@@ -1,0 +1,21 @@
+CHIP P2S {
+    IN indata[4], enable, load;
+    OUT sout, complete;
+
+    PARTS:
+    
+    // 4-bit register to store the input data
+    Register(in=indata, load=load, out=storedData);
+
+    // Counter to track the current bit being output
+    Counter(increment=enable, reset=done, out=count[2]);
+
+    // Multiplexor to select the correct bit from stored data
+    Mux4Way16(a=storedData[0], b=storedData[1], c=storedData[2], d=storedData[3], sel=count, out=selectedBit);
+
+    // Output the selected bit
+    sout=selectedBit;
+
+    // Logic to assert the "complete" signal after 4 clock cycles
+    And(a=count[3], b=enable, out=complete);
+}
