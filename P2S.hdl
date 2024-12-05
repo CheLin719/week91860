@@ -10,7 +10,7 @@ CHIP P2S {
     Register(in=indata[3], load=load, out=q3);
 
     // Counter to track the output bit
-    Counter(in=true, load=load, enable=enable, out=count);
+    Counter(in=load, load=false, enable=enable, out=count);
 
     // Multiplexer to select the output bit
     Mux4way16(a=q0, b=q1, c=q2, d=q3, sel=count[0..1], out=sout);
