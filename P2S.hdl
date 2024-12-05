@@ -2,14 +2,17 @@ CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
     PARTS:
-    // Use a 16-bit register and extend the input data
-    Register16(in[0..3]=indata, in[4..15]=false, load=load, out[0..3]=storedData);
+    // Use individual bits for storing the 4-bit input
+    Bit(in=indata[0], load=load, out=bit0);
+    Bit(in=indata[1], load=load, out=bit1);
+    Bit(in=indata[2], load=load, out=bit2);
+    Bit(in=indata[3], load=load, out=bit3);
     
     // 2-bit counter to keep track of which bit to output
     Counter(in=false, load=enable, inc=enable, reset=complete, out=bitSelect[2]);
     
     // Decode the 2-bit counter to select the correct bit to output
-    Mux4Way(a=storedData[0], b=storedData[1], c=storedData[2], d=storedData[3], 
+    Mux4Way(a=bit0, b=bit1, c=bit2, d=bit3, 
             sel=bitSelect, out=sout);
     
     // Generate complete signal
