@@ -2,21 +2,28 @@ CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
     PARTS:
-    // Use individual bits for storing the 4-bit input
+    // Store individual bits
     Bit(in=indata[0], load=load, out=bit0);
     Bit(in=indata[1], load=load, out=bit1);
     Bit(in=indata[2], load=load, out=bit2);
     Bit(in=indata[3], load=load, out=bit3);
     
-    // 2-bit counter to keep track of which bit to output
-    Counter(in=false, load=enable, inc=enable, reset=complete, out=bitSelect[2]);
+    // Bit selection logic using flip-flops and gates
+    Bit(in=true, load=load, out=state0);
     
-    // Decode the 2-bit counter to select the correct bit to output
-    Mux4Way(a=bit0, b=bit1, c=bit2, d=bit3, 
-            sel=bitSelect, out=sout);
+    // State transitions for bit selection
+    Or(a=state0, b=false, out=nextState);
     
-    // Generate complete signal
-    // Complete is high for 1 clock cycle after 4 bits are transmitted
-    Decoder(in=bitSelect, out=completeDecode);
-    And(a=completeDecode[3], b=enable, out=complete);
+    // Bit selection logic
+    Mux(a=bit0, b=bit1, sel=state1, out=out1);
+    Mux(a=out1, b=bit2, sel=state2, out=out2);
+    Mux(a=out2, b=bit3, sel=state3, out=sout);
+    
+    // State tracking bits
+    Bit(in=nextState, load=enable, out=state1);
+    Bit(in=state1, load=enable, out=state2);
+    Bit(in=state2, load=enable, out=state3);
+    
+    // Complete signal logic
+    And(a=state3, b=enable, out=complete);
 }
