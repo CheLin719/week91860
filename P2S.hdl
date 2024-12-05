@@ -2,28 +2,25 @@ CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
     PARTS:
-    // Store individual bits
-    Bit(in=indata[0], load=load, out=bit0);
-    Bit(in=indata[1], load=load, out=bit1);
-    Bit(in=indata[2], load=load, out=bit2);
-    Bit(in=indata[3], load=load, out=bit3);
+    // Bit to track if we're in transmission mode
+    Bit(in=enable, load=load, out=transmitting);
     
-    // Bit selection logic using flip-flops and gates
-    Bit(in=true, load=load, out=state0);
+    // 4-bit shift register using individual Bit chips
+    Bit(in=indata[0], load=load, out=stored0);
+    Bit(in=indata[1], load=load, out=stored1);
+    Bit(in=indata[2], load=load, out=stored2);
+    Bit(in=indata[3], load=load, out=stored3);
     
-    // State transitions for bit selection
-    Or(a=state0, b=false, out=nextState);
+    // Bit select logic using 2-bit comparison
+    Not(in=stored1, out=ns1a);
+    Not(in=stored2, out=ns2a);
+    Not(in=stored3, out=ns3a);
     
-    // Bit selection logic
-    Mux(a=bit0, b=bit1, sel=state1, out=out1);
-    Mux(a=out1, b=bit2, sel=state2, out=out2);
-    Mux(a=out2, b=bit3, sel=state3, out=sout);
+    Mux4Way(a=stored0, b=stored1, c=stored2, d=stored3,
+            sel[0]=enable, sel[1]=enable, out=sout);
     
-    // State tracking bits
-    Bit(in=nextState, load=enable, out=state1);
-    Bit(in=state1, load=enable, out=state2);
-    Bit(in=state2, load=enable, out=state3);
-    
-    // Complete signal logic
-    And(a=state3, b=enable, out=complete);
+    // Complete logic
+    And(a=transmitting, b=ns1a, out=c1);
+    And(a=c1, b=ns2a, out=c2);
+    And(a=c2, b=ns3a, out=complete);
 }
