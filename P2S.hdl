@@ -2,27 +2,23 @@ CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
     PARTS:
-    // Store input bits
+    // Store input bits when load is asserted
     Bit(in=indata[0], load=load, out=bit0);
     Bit(in=indata[1], load=load, out=bit1);
     Bit(in=indata[2], load=load, out=bit2);
     Bit(in=indata[3], load=load, out=bit3);
+
+    // State tracking bits
+    Bit(in=true, load=load, out=state0);
+    Bit(in=state0, load=enable, out=state1);
+    Bit(in=state1, load=enable, out=state2);
+    Bit(in=state2, load=enable, out=state3);
     
-    // Bit selection logic
-    Not(in=enable, out=notEnable);
-    
-    // First bit selection
-    Mux(a=false, b=bit0, sel=enable, out=firstBit);
-    
-    // Second bit selection
-    Mux(a=firstBit, b=bit1, sel=enable, out=secondBit);
-    
-    // Third bit selection
-    Mux(a=secondBit, b=bit2, sel=enable, out=thirdBit);
-    
-    // Fourth bit and output selection
-    Mux(a=thirdBit, b=bit3, sel=enable, out=sout);
+    // Bit output selection
+    Mux(a=bit0, b=bit1, sel=state1, out=out1);
+    Mux(a=out1, b=bit2, sel=state2, out=out2);
+    Mux(a=out2, b=bit3, sel=state3, out=sout);
     
     // Complete signal logic
-    And(a=enable, b=notEnable, out=complete);
+    And(a=state3, b=enable, out=complete);
 }
