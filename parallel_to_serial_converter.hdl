@@ -3,19 +3,18 @@ CHIP P2S {
     OUT sout, complete;
 
     PARTS:
-    
-    // 4-bit register to store the input data
-    Register(in=indata, load=load, out=storedData);
+    // DFFs to store the 4-bit input
+    DFF(a=indata[0], out=q0, load=load);
+    DFF(a=indata[1], out=q1, load=load);
+    DFF(a=indata[2], out=q2, load=load);
+    DFF(a=indata[3], out=q3, load=load);
 
-    // Counter to track the current bit being output
-    Counter(increment=enable, reset=done, out=count[2]);
+    // Counter to keep track of the output bit
+    Counter(in=load, out=counter_out, reset=enable);
 
-    // Multiplexor to select the correct bit from stored data
-    Mux4Way16(a=storedData[0], b=storedData[1], c=storedData[2], d=storedData[3], sel=count, out=selectedBit);
+    // Multiplexer to select which bit to output
+    Mux4way16(a=q0, b=q1, c=q2, d=q3, sel=counter_out, out=sout);
 
-    // Output the selected bit
-    sout=selectedBit;
-
-    // Logic to assert the "complete" signal after 4 clock cycles
-    And(a=count[3], b=enable, out=complete);
+    // Logic for complete signal
+    And16(a=counter_out[3], b=!counter_out, out=complete);
 }
