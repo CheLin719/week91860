@@ -2,25 +2,27 @@ CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
     PARTS:
-    // Bit to track if we're in transmission mode
-    Bit(in=enable, load=load, out=transmitting);
+    // Store input bits
+    Bit(in=indata[0], load=load, out=bit0);
+    Bit(in=indata[1], load=load, out=bit1);
+    Bit(in=indata[2], load=load, out=bit2);
+    Bit(in=indata[3], load=load, out=bit3);
     
-    // 4-bit shift register using individual Bit chips
-    Bit(in=indata[0], load=load, out=stored0);
-    Bit(in=indata[1], load=load, out=stored1);
-    Bit(in=indata[2], load=load, out=stored2);
-    Bit(in=indata[3], load=load, out=stored3);
+    // Bit selection logic
+    Not(in=enable, out=notEnable);
     
-    // Bit select logic using 2-bit comparison
-    Not(in=stored1, out=ns1a);
-    Not(in=stored2, out=ns2a);
-    Not(in=stored3, out=ns3a);
+    // First bit selection
+    Mux(a=false, b=bit0, sel=enable, out=firstBit);
     
-    Mux4Way(a=stored0, b=stored1, c=stored2, d=stored3,
-            sel[0]=enable, sel[1]=enable, out=sout);
+    // Second bit selection
+    Mux(a=firstBit, b=bit1, sel=enable, out=secondBit);
     
-    // Complete logic
-    And(a=transmitting, b=ns1a, out=c1);
-    And(a=c1, b=ns2a, out=c2);
-    And(a=c2, b=ns3a, out=complete);
+    // Third bit selection
+    Mux(a=secondBit, b=bit2, sel=enable, out=thirdBit);
+    
+    // Fourth bit and output selection
+    Mux(a=thirdBit, b=bit3, sel=enable, out=sout);
+    
+    // Complete signal logic
+    And(a=enable, b=notEnable, out=complete);
 }
