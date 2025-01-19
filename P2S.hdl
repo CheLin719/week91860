@@ -1,27 +1,29 @@
 CHIP P2S {
     IN indata[4], enable, load;
     OUT sout, complete;
+
     PARTS:
-    // Shift register implementation
+    
+    // Individual bit registers for 4-bit input
     Bit(in=indata[0], load=load, out=shiftOut0);
     Bit(in=indata[1], load=load, out=shiftOut1);
     Bit(in=indata[2], load=load, out=shiftOut2);
     Bit(in=indata[3], load=load, out=shiftOut3);
 
-    // Bit selection logic
-    Not(in=enable, out=notEnable);
-    
-    // Bit selection using gates and multiplexing
-    And(a=enable, b=shiftOut0, out=out0);
-    And(a=enable, b=shiftOut1, out=out1);
-    And(a=enable, b=shiftOut2, out=out2);
-    And(a=enable, b=shiftOut3, out=out3);
-    
-    // Final bit output selection
-    Or(a=out0, b=out1, out=orOut1);
-    Or(a=out1, b=out2, out=orOut2);
-    Or(a=out2, b=out3, out=sout);
-    
-    // Complete signal generation
-    And(a=enable, b=notEnable, out=complete);
-}
+    // 2-bit counter for bit selection
+    Counter(width=2, enable=enable, reset=load, out=count);
+
+    // Multiplexing logic to select the correct bit for sout
+    Mux4Way(
+        a=shiftOut0,
+        b=shiftOut1,
+        c=shiftOut2,
+        d=shiftOut3,
+        sel=count,
+        out=sout
+    );
+
+    // Generate the complete signal when all bits are output
+    And(a=count[0], b=count[1], out=complete_signal);
+    And(a=complete_signal, b=enable, out=complete);
+} 
