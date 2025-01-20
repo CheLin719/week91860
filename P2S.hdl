@@ -3,29 +3,34 @@ CHIP P2S {
     OUT sout, complete;
 
     PARTS:
-    
-    // Individual bit registers for 4-bit input
-    Bit(in=indata[0], load=load, out=shiftOut0);
-    Bit(in=indata[1], load=load, out=shiftOut1);
-    Bit(in=indata[2], load=load, out=shiftOut2);
-    Bit(in=indata[3], load=load, out=shiftOut3);
 
-    // Implementing a 2-bit counter using 2 single bits
-    // Bit 0 of the counter
-    Bit(in=notbit0, load=enable, out=bit0);
-    Not(in=bit0, out=notbit0);
+    // Register to store the 4-bit input when load is asserted
+    Register(in=indata, load=load, out=storedData);
 
-    // Bit 1 of the counter
-    And(a=bit0, b=enable, out=bit1load);
-    Bit(in=notbit1, load=bit1load, out=bit1);
-    Not(in=bit1, out=notbit1);
+    // 2-bit counter to track the current bit being output
+    Bit(in=notBit0, load=enable, out=bit0);
+    Not(in=bit0, out=notBit0);
 
-    // Multiplexing logic to select the correct bit for sout using basic Mux gates
-    Mux(a=shiftOut0, b=shiftOut1, sel=bit0, out=muxOut1);
-    Mux(a=shiftOut2, b=shiftOut3, sel=bit0, out=muxOut2);
-    Mux(a=muxOut1, b=muxOut2, sel=bit1, out=sout);
+    And(a=bit0, b=enable, out=bit1Load);
+    Bit(in=notBit1, load=bit1Load, out=bit1);
+    Not(in=bit1, out=notBit1);
 
-    // Generate the complete signal when all bits are output
+    // Generate the mux selection signals from the counter bits
+    Or(a=bit0, b=false, out=sel0);
+    Or(a=bit1, b=false, out=sel1);
+
+    // Multiplexer to select the correct bit from storedData
+    Mux4Way(
+        a=storedData[0],
+        b=storedData[1],
+        c=storedData[2],
+        d=storedData[3],
+        sel[0]=sel0,
+        sel[1]=sel1,
+        out=sout
+    );
+
+    // Generate complete signal when all bits have been transmitted
     And(a=bit0, b=bit1, out=completeSignal);
     And(a=completeSignal, b=enable, out=complete);
 } 
