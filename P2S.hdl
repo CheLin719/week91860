@@ -20,16 +20,10 @@ CHIP P2S {
     Bit(in=notbit1, load=bit1load, out=bit1);
     Not(in=bit1, out=notbit1);
 
-    // Multiplexing logic to select the correct bit for sout
-    Mux4Way(
-        a=shiftOut0,
-        b=shiftOut1,
-        c=shiftOut2,
-        d=shiftOut3,
-        sel[0]=bit0,
-        sel[1]=bit1,
-        out=sout
-    );
+    // Multiplexing logic to select the correct bit for sout using basic Mux gates
+    Mux(a=shiftOut0, b=shiftOut1, sel=bit0, out=muxOut1);
+    Mux(a=shiftOut2, b=shiftOut3, sel=bit0, out=muxOut2);
+    Mux(a=muxOut1, b=muxOut2, sel=bit1, out=sout);
 
     // Generate the complete signal when all bits are output
     And(a=bit0, b=bit1, out=completeSignal);
