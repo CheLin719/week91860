@@ -4,20 +4,23 @@ CHIP P2S {
 
     PARTS:
     
-
+    // Individual bit registers for 4-bit input
     Bit(in=indata[0], load=load, out=shiftOut0);
     Bit(in=indata[1], load=load, out=shiftOut1);
     Bit(in=indata[2], load=load, out=shiftOut2);
     Bit(in=indata[3], load=load, out=shiftOut3);
 
+    // Implementing a 2-bit counter using 2 single bits
+    // Bit 0 of the counter
+    Bit(in=notbit0, load=enable, out=bit0);
+    Not(in=bit0, out=notbit0);
 
-    Bit(in=not_bit0, load=enable, out=bit0);
-    Not(in=bit0, out=not_bit0);
+    // Bit 1 of the counter
+    And(a=bit0, b=enable, out=bit1load);
+    Bit(in=notbit1, load=bit1load, out=bit1);
+    Not(in=bit1, out=notbit1);
 
-    And(a=bit0, b=enable, out=bit1_load);
-    Bit(in=not_bit1, load=bit1_load, out=bit1);
-    Not(in=bit1, out=not_bit1);
-
+    // Multiplexing logic to select the correct bit for sout
     Mux4Way(
         a=shiftOut0,
         b=shiftOut1,
@@ -28,6 +31,7 @@ CHIP P2S {
         out=sout
     );
 
-    And(a=bit0, b=bit1, out=complete_signal);
-    And(a=complete_signal, b=enable, out=complete);
+    // Generate the complete signal when all bits are output
+    And(a=bit0, b=bit1, out=completeSignal);
+    And(a=completeSignal, b=enable, out=complete);
 } 
