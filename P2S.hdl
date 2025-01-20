@@ -5,7 +5,10 @@ CHIP P2S {
     PARTS:
 
     // Register to store the 4-bit input when load is asserted
-    Register(in=indata, load=load, out=storedData);
+    Bit(in=indata[0], load=load, out=storedData0);
+    Bit(in=indata[1], load=load, out=storedData1);
+    Bit(in=indata[2], load=load, out=storedData2);
+    Bit(in=indata[3], load=load, out=storedData3);
 
     // 2-bit counter to track the current bit being output
     Bit(in=notBit0, load=enable, out=bit0);
@@ -15,20 +18,10 @@ CHIP P2S {
     Bit(in=notBit1, load=bit1Load, out=bit1);
     Not(in=bit1, out=notBit1);
 
-    // Generate the mux selection signals from the counter bits
-    Or(a=bit0, b=false, out=sel0);
-    Or(a=bit1, b=false, out=sel1);
-
     // Multiplexer to select the correct bit from storedData
-    Mux4Way(
-        a=storedData[0],
-        b=storedData[1],
-        c=storedData[2],
-        d=storedData[3],
-        sel[0]=sel0,
-        sel[1]=sel1,
-        out=sout
-    );
+    Mux(a=storedData0, b=storedData1, sel=bit0, out=muxOut1);
+    Mux(a=storedData2, b=storedData3, sel=bit0, out=muxOut2);
+    Mux(a=muxOut1, b=muxOut2, sel=bit1, out=sout);
 
     // Generate complete signal when all bits have been transmitted
     And(a=bit0, b=bit1, out=completeSignal);
